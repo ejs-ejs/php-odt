@@ -22,8 +22,17 @@ class ParagraphStyle extends Style {
 	}
 
 	/**
-	 * Specifies a fixed line height either as a length or a percentage that 
-	 * relates to the highest character in a line. The value StyleConstants::NORMAL 
+	 * Sets as child style.
+	 *
+	 * @param string $parent
+	 */
+	function setAsChild($parent) {
+		$this->styleElement->setAttribute('style:parent-style-name', $parent);
+	}
+
+	/**
+	 * Specifies a fixed line height either as a length or a percentage that
+	 * relates to the highest character in a line. The value StyleConstants::NORMAL
 	 * activates the default line height calculation
 	 *
 	 * @param length|percentage|StyleConstants::NORMAL $lineHeight
@@ -40,6 +49,10 @@ class ParagraphStyle extends Style {
 		$element->setAttribute('fo:line-height', $lineHeight);
 		$this->styleElement->appendChild($element);
 	}
+
+
+
+
 
 	/**
 	 * Specifies a fixed distance between two lines.
@@ -130,6 +143,49 @@ class ParagraphStyle extends Style {
 		$element->setAttribute('fo:orphans', $orphans);
 		$this->styleElement->appendChild($element);
 	}
+
+	/**
+	 * Draw a line through text.
+	 * lineType can have one of these
+	 * lineWidth can have these
+	 * @param integer $lineStyle values: StyleConstants::NONE, StyleConstants::SINGLE, StyleConstants::DOUBLE, StyleConstants::BOLD, StyleConstants::X, StyleConstants::SLASH
+	 */
+
+	function setLineThrough($lineStyle = StyleConstants::SOLID) {
+		switch ($lineStyle) {
+            case StyleConstants::NONE:
+                $element = $this->styleDocument->createElement('style:text-properties');
+                $element->setAttribute('style:text-line-through-style', 'none');
+                $element->setAttribute('style:text-line-through-type', 'none');break;
+			case StyleConstants::SINGLE:$element = $this->styleDocument->createElement('style:text-properties');
+                $element->setAttribute('style:text-line-through-style', 'solid');
+                $element->setAttribute('style:text-line-through-type', 'single');break;
+            case StyleConstants::DOUBLE:
+                $element = $this->styleDocument->createElement('style:text-properties');
+                $element->setAttribute('style:text-line-through-style', 'solid');
+                $element->setAttribute('style:text-line-through-type', 'double');break;
+			case StyleConstants::BOLD:
+                $element = $this->styleDocument->createElement('style:text-properties');
+                $element->setAttribute('style:text-line-through-style', 'solid');
+                $element->setAttribute('style:text-line-through-type', 'single');
+			    $element->setAttribute('style:text-line-through-width', 'bold');break;
+			case StyleConstants::X:
+                $element = $this->styleDocument->createElement('style:text-properties');
+                $element->setAttribute('style:text-line-through-style', 'solid');
+                $element->setAttribute('style:text-line-through-type', 'single');
+			    $element->setAttribute('style:text-line-through-text','X');break;
+            case StyleConstants::SLASH:
+                $element = $this->styleDocument->createElement('style:text-properties');
+                $element->setAttribute('style:text-line-through-style', 'solid');
+                $element->setAttribute('style:text-line-through-type', 'single');
+			    $element->setAttribute('style:text-line-through-text','/');break;
+			default:
+				throw new StyleException('LineStyle value is not valid.');
+		}
+
+		$this->styleElement->appendChild($element);
+	}
+
 
 	/**
 	 * Specifies the left & right margin for a paragraph

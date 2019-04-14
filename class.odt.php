@@ -27,7 +27,7 @@ class ODT {
 //	private $officeStyles;
 //	private $officeAutomaticStyles;
 //	private $permissions;
-	
+
 	private static $instance;
 
 	/**
@@ -37,7 +37,7 @@ class ODT {
 	private function __construct() {
 		$this->initContent();
 	}
-	
+
 	static function getInstance() {
 		if (self::$instance == null) {
 			self::$instance = new ODT();
@@ -120,7 +120,7 @@ class ODT {
 		$root->setAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/');
 		$root->setAttribute('office:version', '1.1');
 		$this->metadata->appendChild($root);
-		
+
 		$generator = $this->metadata->createElement('meta:generator', self::GENERATOR);
 		$creationDate = $this->metadata->createElement('meta:creation-date', date('Y-m-d\TH:i:s'));
 		$this->officeMeta = $this->metadata->createElement('office:meta');
@@ -200,7 +200,7 @@ class ODT {
 		$officeAutomaticStyles = $this->documentContent->createElement('office:automatic-styles');
 		$root->appendChild($officeAutomaticStyles);
 
-		
+
 		$this->officeBody = $this->documentContent->createElement('office:body');
 		$root->appendChild($this->officeBody);
 
@@ -272,18 +272,19 @@ class ODT {
 	function getStyleDocument() {
 		return $this->styles;
 	}
-	
+
 	public function getDocumentContent() {
 		return $this->documentContent;
 	}
-	
+
 	/**
 	 * Write the document to the hard disk
 	 */
 	function output($fileName, $perm = 0777) {
 
 		$document = new ZipArchive();
-		$document->open($fileName, ZIPARCHIVE::OVERWRITE);
+		$res_ = $document->open($fileName, ZipArchive::OVERWRITE || ZipArchive::CREATE);
+
 
 		$document->addFromString('META-INF/manifest.xml', $this->manifest->saveXML());
 		$document->addFromString('styles.xml', $this->styles->saveXML());

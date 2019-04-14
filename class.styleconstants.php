@@ -84,35 +84,39 @@ class StyleConstants {
 	/** Current date */const CURRENT_DATE = 60;
 
 	/** In the case of table: The table fills all the space between the left and right margins,  */const MARGINS = 61;
-	
+
 	const COLLAPSING = 62;
 	const SEPARATING = 63;
-	
+
 	const FIX = 64;
 	const VALUE_TYPE = 65;
-	
+
 	const LTR = 66;
 	const TTB = 67;
-	
+
 	const WRAP = 68;
 	const NO_WRAP = 69;
-	
+
 	const BULLET = '&#x2022;';
 	const BLACK_CIRCLE = '&#x25CF;';
 	const CHECK_MARK = '&#x2714;';
 	const BALLOT_X = '&#x2717;';
 	const RIGHT_ARROW = '&#x2794;';
 	const RIGHT_ARROWHEAD = '&#x27A2;';
-	
+
 	const RUBY_ABOVE = 70;
 	const RUBY_BELOW = 71;
-	
+
 	const DISTRIBUTE_LETTER = 72;
 	const DISTRIBUTE_SPACE = 73;
-	
+
 	const FOOTNOTE = 74;
 	const ENDNOTE = 75;
+
+	/** Paragraph strike-through, along with NONE, SINGLE, DOUBLE, BOLD:
+	*/
+	const X = 100;
+	const SLASH = 101;
 }
 
 ?>
-	

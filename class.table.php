@@ -47,12 +47,12 @@ class Table {
 	}
 
 	/**
-	 * Create the number of columns specified. If the DOMDocument representing the styles is passed as the 
-	 * second argument, a ColumnStyle is created for each column, and can be retrieved by 
+	 * Create the number of columns specified. If the DOMDocument representing the styles is passed as the
+	 * second argument, a ColumnStyle is created for each column, and can be retrieved by
 	 * the method {@link #getColumnStyle getColumnStyle()}
-	 * 
+	 *
 	 * @param integer $nbCols The number of columns
-	 * @param DOMDocument $styleDoc 
+	 * @param DOMDocument $styleDoc
 	 */
 	public function createColumns($nbCols, $createStyles = true) {
 		$letters = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -75,8 +75,8 @@ class Table {
 
 	/**
 	 * Creates a header for each column using the elments of the array passed.
-	 * 
-	 * @param array $headers 
+	 *
+	 * @param array $headers
 	 */
 	public function addHeader($headers) {
 		$letters = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -98,13 +98,13 @@ class Table {
 	}
 
 	/**
-	 * Add rows to the table. 
-	 * 
+	 * Add rows to the table.
+	 *
 	 * @param array $rows A two dimension array, representing the rows, and the cells inside each row
 	 * @param DOMDocument $styleDoc The DOMDocument representing the styles
 	 */
 	public function addRows($rows, $createStyles = true) {
-		$letters = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 
+		$letters = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
 						 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
 		$rowsElement = $this->contentDocument->createElement('table:table-rows');
 		$i = 0;
@@ -121,11 +121,20 @@ class Table {
 					$cellElement->setAttribute('office:value-type', 'string');
 					$cellElement->setAttribute('table:style-name', $styleName);
 				}
-				if ($cell instanceof Paragraph) {
-          $p = $cell->getDOMElement();
-        } else {
-          $p = $this->contentDocument->createElement('text:p', $cell);
-        }
+				if (($cell instanceof Paragraph) || ($cell instanceof AutoNumberedText)) {
+                  $p = $cell->getDOMElement();
+                  } else {
+                     if (is_array ( $cell) ) {
+                      // cell is horizontal array [0] holds content and count() describes horizontal span
+                      // <table:table-cell table:style-name="docTable.A1" table:number-columns-spanned="3"
+                     $hSpan = count($cell);
+                     $cellElement->setAttribute('table:number-columns-spanned', $hSpan);
+                    $p = $this->contentDocument->createElement('text:p', $cell[0]);
+
+                    } else {
+                    $p = $this->contentDocument->createElement('text:p', $cell);
+                    }
+                 }
 				$cellElement->appendChild($p);
 				$this->cells[$i][$j] = $cellElement;
 				$rowElement->appendChild($cellElement);
@@ -137,11 +146,89 @@ class Table {
 		$this->tableElement->appendChild($rowsElement);
 	}
 
+	// Add covered table cell
+	public function addCoveredCell($rowElement) {
+		$cellElement = $this->contentDocument->createElement('table:covered-table-cell');
+		$rowElement->appendChild($cellElement);
+	}
+
+	/**
+	 * Start row  of the table.
+    * must end with endRow();
+	 *
+	 */
+	public function startRow() {
+		$rowsElement = $this->contentDocument->createElement('table:table-rows');
+		$rowElement = $this->contentDocument->createElement('table:table-row');
+		$rowElement->setAttribute('office:value-type', 'string');
+       return array($rowsElement, $rowElement);
+
+	}
+
+
+
+	public function endRow($rowsElement, $rowElement) {
+
+	    $rowsElement->appendChild($rowElement);
+		$this->tableElement->appendChild($rowsElement);
+	}
+
+	public function createCell($rowElement, $cell, $createStyles = true) {
+        $letters = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
+						 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
+
+        $cellElement = $this->contentDocument->createElement('table:table-cell');
+        $cellElement->setAttribute('office:value-type', 'string');
+	 
+        if (empty($this->cells)) {
+            $i=1;
+            } else {
+            $i = count($this->cells)-1;
+            }
+
+        if (empty($this->cells[$i])) {
+            $j=1;
+            } else {
+            $j = count($this->cells[$i])-1;
+        }
+
+        if ($createStyles) {
+            $styleName = $this->tableName . '.' . ($j < 26 ? $letters[$j] : $letters[0] . $letters[$j - 26]) . ($i + 1);
+            $this->cellsStyles[$i][$j] = new CellStyle($styleName);
+            $cellElement->setAttribute('office:value-type', 'string');
+            $cellElement->setAttribute('table:style-name', $styleName);
+		}
+        
+        if (($cell instanceof Paragraph) || ($cell instanceof AutoNumberedText)) {
+            $p = $cell->getDOMElement();
+            } else {
+                if (is_array ( $cell) ) {
+       
+          /* cell is horizontal array [0] holds content and count() describes horizontal span
+          * <table:table-cell table:style-name="docTable.A1" table:number-columns-spanned="3"
+          */
+                $hSpan = count($cell);
+                $cellElement->setAttribute('table:number-columns-spanned', $hSpan);
+                $p = $this->contentDocument->createElement('text:p', $cell[0]);
+            } else {
+                $p = $this->contentDocument->createElement('text:p', $cell);
+            }
+        }
+        $cellElement->appendChild($p);
+        $this->cells[$i][$j+1] = $cellElement;
+        $rowElement->appendChild($cellElement);
+        
+        return array($i, $j+1);
+	}
+
+
+
+
 	/**
 	 * Affect a RowStyle to the row at the position $rowIndex
 	 *
 	 * @param integer $rowIndex
-	 * @param RowStyle $rowStyle 
+	 * @param RowStyle $rowStyle
 	 */
 	public function setRowStyle($rowIndex, $rowStyle) {
 		$this->rows[$rowIndex]->setAttribute('table:style-name', $rowStyle->getStyleName());
@@ -151,17 +238,32 @@ class Table {
 	 * Affect a CellStyle to the cell at the position ($colIndex, $rowIndex)
 	 * @param integer $colIndex
 	 * @param integer $rowIndex
-	 * @param CellStyle $cellStyle 
+	 * @param CellStyle $cellStyle
 	 */
 	public function setCellStyle($colIndex, $rowIndex, $cellStyle) {
 		$this->cells[$rowIndex][$colIndex]->setAttribute('table:style-name', $cellStyle->getStyleName());
 	}
 
+	/* Set vertical span for cell
+	*/
+	public function setCellSpanV($col, $row, $cellSpanV) {
+		$this->cells[$row][$col]->setAttribute('table:number-rows-spanned', $cellSpanV);
+		//dd($this);
+	}
+
+	public function getCurrentCell() {
+
+	   $i = count($this->cells)-1;
+       $j = count($this->cells[$i])-1;
+ 	return array($i, $j);
+	}
+
+
 	/**
 	 * Return the ColumnStyle of the given index
-	 * 
+	 *
 	 * @param integer $index
-	 * @return ColumnStyle 
+	 * @return ColumnStyle
 	 */
 	public function getColumnStyle($index) {
 		return $this->columnsStyles[$index];
@@ -169,10 +271,10 @@ class Table {
 
 	/**
 	 * Return the CellStyle of the given position
-	 * 
+	 *
 	 * @param integer $col
 	 * @param integer $row
-	 * @return CellStyle 
+	 * @return CellStyle
 	 */
 	public function getCellStyle($col, $row) {
 		return $this->cellsStyles[$row][$col];
@@ -184,10 +286,12 @@ class Table {
 		}
 		$this->tableElement->setAttribute('table:style-name', $tableStyle->getStyleName());
 	}
-  
-  function getTableName() {
+
+
+
+    function getTableName() {
     return $this->tableName;
-  }
+    }
 
 }
 
